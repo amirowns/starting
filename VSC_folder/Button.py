@@ -1,4 +1,7 @@
+import pygame
+
 WHITE = (255, 255, 255)
+
 
 def text_objects(text, font):
     textSurface = font.render(text, True, WHITE)
