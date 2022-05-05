@@ -12,6 +12,7 @@
 
 import sys
 import pygame
+import Button
 
 # create a clock to track time
 clock = pygame.time.Clock()
@@ -21,6 +22,12 @@ clock = pygame.time.Clock()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
+DARK_GRAY = (24, 25, 26)
+LIGHT_GRAY = (58, 59, 60)
+GREEN = (0, 200, 0)
+BRIGHT_GREEN = (40, 255, 0)
+RED = (200, 0, 0)
+BRIGHT_RED = (255, 40, 0)
 
 # set up pygame and its screen
 pygame.init()
@@ -64,7 +71,14 @@ def game_loop():
         
         # fills screen so old swords get covered
         screen.fill(BLACK)
+        # bottom half of screen is dark gray
+        pygame.draw.rect(screen, DARK_GRAY, (0, DISPLAY_HEIGHT/2, DISPLAY_WIDTH, DISPLAY_HEIGHT/2))
 
+        # grid starting pos
+        MERGE_START_X = DISPLAY_WIDTH * 2/3
+        MERGE_START_Y = DISPLAY_HEIGHT * 2/3
+
+        # Button1 = Button.Button(None, DARK_GRAY, LIGHT_GRAY, None, (MERGE_START_X, MERGE_START_Y, 32, 32))
         # puts sword on screen
         screen.blit(sword_1, rect)
 
