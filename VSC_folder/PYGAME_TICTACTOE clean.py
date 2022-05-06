@@ -1,7 +1,7 @@
 
 import pygame
 import sys
-from Button import Button 
+import Button 
 
 # colors for text
 WHITE = (255, 255, 255)
@@ -61,8 +61,8 @@ def game_intro():
     message_display("Tic Tac Toe")
 
     # make buttons
-    green_button = Button("Start", GREEN, BRIGHT_GREEN, smallText, pygame.Rect(display_width * 0.2, display_height * .75, display_width * 0.2, display_height * 0.1))
-    red_button = Button("Quit", RED, BRIGHT_RED, smallText, pygame.Rect(display_width * 0.6, display_height * .75, display_width * 0.2, display_height * 0.1))
+    green_button = Button.Button("Start", GREEN, BRIGHT_GREEN, smallText, pygame.Rect(display_width * 0.2, display_height * .75, display_width * 0.2, display_height * 0.1))
+    red_button = Button.Button("Quit", RED, BRIGHT_RED, smallText, pygame.Rect(display_width * 0.6, display_height * .75, display_width * 0.2, display_height * 0.1))
     
     # add buttons to button list
     MM_Button_list.append(green_button)
@@ -78,11 +78,19 @@ def game_intro():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for button in MM_Button_list:
                     if button.hovered(mouse):
+                        # enlarges button when hovered
+                        button.rect = pygame.Rect.inflate(button.rect, 20, 20)
+                        
+            elif event.type == pygame.MOUSEBUTTONUP:
+                for button in MM_Button_list:
+                    if button.hovered(mouse):
                         if button.text == "Start":
                             game_loop()
                             break
                         elif button.text == "Quit":
                             sys.exit()
+
+                    
             else: 
                 pass
 
@@ -108,15 +116,15 @@ def game_loop():
     TTT_Button_list = []
     
     # makes the buttons easily
-    Top_Left = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 0, display_height * 0, display_width * 1/3, display_height * 1/3))
-    Top_Middle = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 1/3, display_height * 0, display_width * 1/3, display_height * 1/3))
-    Top_Right = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 2/3, display_height * 0, display_width * 1/3, display_height * 1/3))
-    Middle_Left = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 0, display_height * 1/3, display_width * 1/3, display_height * 1/3))
-    Middle_Middle = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 1/3, display_height * 1/3, display_width * 1/3, display_height * 1/3))
-    Middle_Right = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 2/3, display_height * 1/3, display_width * 1/3, display_height * 1/3))
-    Bottom_Left = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 0, display_height * 2/3, display_width * 1/3, display_height * 1/3))
-    Bottom_Middle = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 1/3, display_height * 2/3, display_width * 1/3, display_height * 1/3))
-    Bottom_Right = Button(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 2/3, display_height * 2/3, display_width * 1/3, display_height * 1/3))
+    Top_Left = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 0, display_height * 0, display_width * 1/3, display_height * 1/3))
+    Top_Middle = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 1/3, display_height * 0, display_width * 1/3, display_height * 1/3))
+    Top_Right = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 2/3, display_height * 0, display_width * 1/3, display_height * 1/3))
+    Middle_Left = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 0, display_height * 1/3, display_width * 1/3, display_height * 1/3))
+    Middle_Middle = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 1/3, display_height * 1/3, display_width * 1/3, display_height * 1/3))
+    Middle_Right = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 2/3, display_height * 1/3, display_width * 1/3, display_height * 1/3))
+    Bottom_Left = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 0, display_height * 2/3, display_width * 1/3, display_height * 1/3))
+    Bottom_Middle = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 1/3, display_height * 2/3, display_width * 1/3, display_height * 1/3))
+    Bottom_Right = Button.TTTButton(None, DARK_GRAY, LIGHT_GRAY, largeText, pygame.Rect(display_width * 2/3, display_height * 2/3, display_width * 1/3, display_height * 1/3))
 
     # add buttons to list
     TTT_Button_list.append(Top_Left)

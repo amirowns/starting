@@ -42,8 +42,8 @@ pygame.display.set_caption('Another Idle Game')
 # images used
 sword_1 = pygame.image.load("VSC_folder/pictures/sword1.png")
 sword_1.convert()
-rect = sword_1.get_rect()
-rect.center = DISPLAY_WIDTH//2, DISPLAY_HEIGHT//2
+sword_rect = sword_1.get_rect()
+sword_rect.center = DISPLAY_WIDTH//2, DISPLAY_HEIGHT//2
 
 # set up font and text; size=25, bold=True, italic=False
 smallText = pygame.font.SysFont("Arial", 25, True, False)
@@ -52,38 +52,66 @@ largeText = pygame.font.SysFont('Arial', 100, True, False)
 
 def game_loop():
     moving = False
+
+    # gets the mouse position
+    mouse = pygame.mouse.get_pos()
+
+    # grid starting pos
+    MERGE_START_X = DISPLAY_WIDTH * 2/3
+    MERGE_START_Y = DISPLAY_HEIGHT * 2/3
+    BOX_DIMENSION = 32
+
+    MERGE_BUTTON_LIST = []
+    # making buttons
+    Button1 = Button.Button("Yo", RED, BRIGHT_RED, smallText, pygame.Rect(MERGE_START_X, MERGE_START_Y, 32, 32))
+    # append buttons to list
+    MERGE_BUTTON_LIST.append(Button1)
+
+
     while True:
 
-        # gets the mouse position
-        mouse = pygame.mouse.get_pos()
 
         # exits game if you click the X in top right
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if rect.collidepoint(event.pos):
+                if sword_rect.collidepoint(event.pos):
                     moving = True
             elif event.type == pygame.MOUSEBUTTONUP:
                 moving = False
+                # if mouse button release and sword was moving, make the sword rect snap to center of the button
+                for button in MERGE_BUTTON_LIST:
+                    if button.rect.colliderect(sword_rect):
+                        sword_rect.center == button.rect.center
             elif event.type == pygame.MOUSEMOTION and moving:
-                rect.move_ip(event.rel)
-        
+                #moves sword relative4 distance mouse moves
+                    #sword_rect.move_ip(event.rel)
+                # makes the sword center the same as mouse position
+                sword_rect.center = pygame.mouse.get_pos()
+
         # fills screen so old swords get covered
         screen.fill(BLACK)
+
         # bottom half of screen is dark gray
         pygame.draw.rect(screen, DARK_GRAY, (0, DISPLAY_HEIGHT/2, DISPLAY_WIDTH, DISPLAY_HEIGHT/2))
 
-        # grid starting pos
-        MERGE_START_X = DISPLAY_WIDTH * 2/3
-        MERGE_START_Y = DISPLAY_HEIGHT * 2/3
+        # buttons
+        for button in MERGE_BUTTON_LIST:
+            if button.rect.collidepoint(mouse):
+                button.current_color == button.bright_color
+            #button.brighten(mouse)
+            pygame.draw.rect(screen, button.current_color, button.rect)
+            textSurf, textRect = button.text_objects
+            textRect.center = (button.rect.center)
+            screen.blit(textSurf, textRect)
 
-        # Button1 = Button.Button(None, DARK_GRAY, LIGHT_GRAY, None, (MERGE_START_X, MERGE_START_Y, 32, 32))
+
         # puts sword on screen
-        screen.blit(sword_1, rect)
+        screen.blit(sword_1, sword_rect)
 
         # draws border around sword
-        pygame.draw.rect(screen, YELLOW, rect, 1, 5)
+        pygame.draw.rect(screen, YELLOW, sword_rect, 1, 5)
 
         # updates stuff on display
         pygame.display.update()
