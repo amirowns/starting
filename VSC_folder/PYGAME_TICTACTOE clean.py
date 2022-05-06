@@ -61,8 +61,8 @@ def game_intro():
     message_display("Tic Tac Toe")
 
     # make buttons
-    green_button = Button.Button("Start", GREEN, BRIGHT_GREEN, smallText, pygame.Rect(display_width * 0.2, display_height * .75, display_width * 0.2, display_height * 0.1))
-    red_button = Button.Button("Quit", RED, BRIGHT_RED, smallText, pygame.Rect(display_width * 0.6, display_height * .75, display_width * 0.2, display_height * 0.1))
+    green_button = Button.TTTButton("Start", GREEN, BRIGHT_GREEN, smallText, pygame.Rect(display_width * 0.2, display_height * .75, display_width * 0.2, display_height * 0.1))
+    red_button = Button.TTTButton("Quit", RED, BRIGHT_RED, smallText, pygame.Rect(display_width * 0.6, display_height * .75, display_width * 0.2, display_height * 0.1))
     
     # add buttons to button list
     MM_Button_list.append(green_button)

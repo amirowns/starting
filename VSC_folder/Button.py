@@ -9,14 +9,11 @@ def text_objects(text, font):
     return textSurface, textSurface.get_rect()
 
 class Button(object):
-    def __init__(self, text, base_color, bright_color, font, rect):
-        self.text = text
+    def __init__(self, base_color, bright_color, rect):
         self.base_color = base_color
         self.bright_color = bright_color
-        self.font = font
         self.rect = rect
         self.current_color = self.base_color
-        self.text_objects = text_objects(text, font)
 
     """def draw(self, win):
         pygame.draw.rect(win, self.base_color, self.bright_color, self.rect)"""

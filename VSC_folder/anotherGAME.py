@@ -63,13 +63,13 @@ def game_loop():
 
     MERGE_BUTTON_LIST = []
     # making buttons
-    Button1 = Button.Button("Yo", RED, BRIGHT_RED, smallText, pygame.Rect(MERGE_START_X, MERGE_START_Y, 32, 32))
+    Button1 = Button.Button(RED, BRIGHT_RED, pygame.Rect(MERGE_START_X, MERGE_START_Y, 32, 32))
     # append buttons to list
     MERGE_BUTTON_LIST.append(Button1)
 
 
     while True:
-
+        mouse = pygame.mouse.get_pos()
 
         # exits game if you click the X in top right
         for event in pygame.event.get():
@@ -98,14 +98,8 @@ def game_loop():
 
         # buttons
         for button in MERGE_BUTTON_LIST:
-            if button.rect.collidepoint(mouse):
-                button.current_color == button.bright_color
-            #button.brighten(mouse)
+            button.brighten(mouse)
             pygame.draw.rect(screen, button.current_color, button.rect)
-            textSurf, textRect = button.text_objects
-            textRect.center = (button.rect.center)
-            screen.blit(textSurf, textRect)
-
 
         # puts sword on screen
         screen.blit(sword_1, sword_rect)
