@@ -4,3 +4,5 @@
 
 /.vs/starting/v17
 /.vs/slnx.sqlite
+__pycache__/
+.vscode/
