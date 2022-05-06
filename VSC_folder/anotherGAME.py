@@ -78,17 +78,19 @@ def game_loop():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if sword_rect.collidepoint(event.pos):
                     moving = True
-            elif event.type == pygame.MOUSEBUTTONUP:
-                moving = False
-                # if mouse button release and sword was moving, make the sword rect snap to center of the button
-                for button in MERGE_BUTTON_LIST:
-                    if button.rect.colliderect(sword_rect):
-                        sword_rect.center == button.rect.center
             elif event.type == pygame.MOUSEMOTION and moving:
                 #moves sword relative4 distance mouse moves
                     #sword_rect.move_ip(event.rel)
                 # makes the sword center the same as mouse position
                 sword_rect.center = pygame.mouse.get_pos()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                moving = False
+                # if mouse button release and sword was moving, make the sword rect snap to center of the button
+                for button in MERGE_BUTTON_LIST:
+                    if button.hovered(mouse):
+
+                        sword_rect.center = button.rect.center
+                    
 
         # fills screen so old swords get covered
         screen.fill(BLACK)
