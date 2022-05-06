@@ -13,6 +13,7 @@
 import sys
 import pygame
 import Button
+from itertools import chain
 
 # create a clock to track time
 clock = pygame.time.Clock()
@@ -56,16 +57,18 @@ def game_loop():
     # gets the mouse position
     mouse = pygame.mouse.get_pos()
 
+    #TODO currently working on this line to 70, make grid of buttons
     # grid starting pos
-    MERGE_START_X = DISPLAY_WIDTH * 2/3
-    MERGE_START_Y = DISPLAY_HEIGHT * 2/3
+    COLUMN_ONE = DISPLAY_WIDTH * 1/4
+    ROW_ONE = DISPLAY_HEIGHT * 0.6
     BOX_DIMENSION = 32
+    MOVE_OVER = BOX_DIMENSION + 5
 
-    MERGE_BUTTON_LIST = []
+  
     # making buttons
-    Button1 = Button.Button(RED, BRIGHT_RED, pygame.Rect(MERGE_START_X, MERGE_START_Y, 32, 32))
+    #Button1 = Button.Button(RED, BRIGHT_RED, pygame.Rect(MERGE_START_X, MERGE_START_Y, BOX_DIMENSION, BOX_DIMENSION))
     # append buttons to list
-    MERGE_BUTTON_LIST.append(Button1)
+    #MERGE_BUTTON_LIST.append(Button1)
 
 
     while True:
@@ -79,17 +82,17 @@ def game_loop():
                 if sword_rect.collidepoint(event.pos):
                     moving = True
             elif event.type == pygame.MOUSEMOTION and moving:
-                #moves sword relative4 distance mouse moves
+                    #moves sword relative distance mouse moves
                     #sword_rect.move_ip(event.rel)
                 # makes the sword center the same as mouse position
                 sword_rect.center = pygame.mouse.get_pos()
             elif event.type == pygame.MOUSEBUTTONUP:
-                moving = False
                 # if mouse button release and sword was moving, make the sword rect snap to center of the button
                 for button in MERGE_BUTTON_LIST:
-                    if button.hovered(mouse):
-
+                    if button.hovered(mouse) and moving:
                         sword_rect.center = button.rect.center
+                moving = False
+
                     
 
         # fills screen so old swords get covered
