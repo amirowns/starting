@@ -56,9 +56,9 @@ def game_intro():
     intro = True
 
     MM_Button_list = []
-
     screen.fill(BLACK)
     message_display("Tic Tac Toe")
+
 
     # make buttons
     green_button = Button.TTTButton("Start", GREEN, BRIGHT_GREEN, smallText, pygame.Rect(display_width * 0.2, display_height * .75, display_width * 0.2, display_height * 0.1))
@@ -71,7 +71,6 @@ def game_intro():
     while intro:
 
         mouse = pygame.mouse.get_pos()
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
@@ -80,7 +79,6 @@ def game_intro():
                     if button.hovered(mouse):
                         # enlarges button when hovered
                         button.rect = pygame.Rect.inflate(button.rect, 20, 20)
-                        
             elif event.type == pygame.MOUSEBUTTONUP:
                 for button in MM_Button_list:
                     if button.hovered(mouse):
@@ -89,6 +87,7 @@ def game_intro():
                             break
                         elif button.text == "Quit":
                             sys.exit()
+    
 
                     
             else: 
