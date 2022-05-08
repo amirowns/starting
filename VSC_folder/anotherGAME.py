@@ -40,7 +40,9 @@ screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption('Another Idle Game')
 
 class Item():
-    def __init__(self, image_location):
+    def __init__(self, item_type, item_level, image_location):
+        self.item_type = item_type
+        self.item_level = item_level
         self.image_location = image_location
         self.image = pygame.image.load(self.image_location)
         self.image.convert()
@@ -48,10 +50,13 @@ class Item():
         self.rect.center = DISPLAY_WIDTH//2, DISPLAY_HEIGHT//2
         self.moving = False
 
+    def __str__(self):
+        return f"level {self.item_level} {self.item_type}, rect = {self.rect}, moving? {self.moving}."
+    
 # images used
-sword_1 = Item("VSC_folder/pictures/sword1.png")
-shield_1 = Item("VSC_folder/pictures/shield1.png")
-sword_2 = Item("VSC_folder/pictures/sword1.png")
+sword_1 = Item("sword", 1, "VSC_folder/pictures/sword1.png")
+shield_1 = Item("shield", 1, "VSC_folder/pictures/shield1.png")
+sword_2 = Item("sword", 1, "VSC_folder/pictures/sword1.png")
 
 # set up font and text; size=25, bold=True, italic=False
 smallText = pygame.font.SysFont("Arial", 25, True, False)
@@ -71,10 +76,9 @@ def game_loop():
     MERGE_BUTTON_LIST = []
     
     # MAKES GRID OF BUTTONS :D
-    for x in range(3): # columns
-        for y in range(3): # rows
+    for y in range(3): # columns
+        for x in range(3): # rows
             MERGE_BUTTON_LIST.append(Button.Button(RED, BRIGHT_RED, pygame.Rect((COLUMN_ONE + (x * MOVE_OVER)), (ROW_ONE + (y * MOVE_OVER)), BOX_DIMENSION, BOX_DIMENSION)))
-
     current_items_list = [] #list of current items in the grid
     current_items_list.append(sword_1)
     current_items_list.append(shield_1)
@@ -84,11 +88,13 @@ def game_loop():
 
     holding = False
     #############################################################################################
-    # currently spawns items in to last button 
+    # if button is not full, spawn item at button location and make button have item
     for item in current_items_list:
         for button in MERGE_BUTTON_LIST:
             if button.has_item == False:
                 item.rect.center = button.rect.center
+                button.has_item = True
+                break
     ############################################################################################################
     while True:
 
@@ -155,6 +161,7 @@ def game_loop():
                     ##################################################################    
                     current_item.moving = False 
                     current_item = None
+
         # spawns sword on screen, last one drawn gets put on top
         for item in current_items_list[::-1]:
             screen.blit(item.image, item.rect) 
@@ -164,7 +171,6 @@ def game_loop():
 
         # updates stuff on display
         pygame.display.update()
-
 
         # limit the update to 60 frames per second
         clock.tick(60)

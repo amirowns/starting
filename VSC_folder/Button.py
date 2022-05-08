@@ -17,6 +17,9 @@ class Button(object):
         self.current_color = self.base_color
         self.has_item = False
 
+    def __str__(self):
+        return f"Button: base_color = {self.base_color}, bright_color = {self.bright_color}, rect = {self.rect}, has item? {self.has_item}"
+
     """def draw(self, win):
         pygame.draw.rect(win, self.base_color, self.bright_color, self.rect)"""
 
