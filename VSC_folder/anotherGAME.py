@@ -71,18 +71,25 @@ def game_loop():
     MERGE_BUTTON_LIST = []
     
     # MAKES GRID OF BUTTONS :D
-    for x in range(6): # columns
-        for y in range(6): # rows
+    for x in range(3): # columns
+        for y in range(3): # rows
             MERGE_BUTTON_LIST.append(Button.Button(RED, BRIGHT_RED, pygame.Rect((COLUMN_ONE + (x * MOVE_OVER)), (ROW_ONE + (y * MOVE_OVER)), BOX_DIMENSION, BOX_DIMENSION)))
 
-    CURRENT_ITEMS = [] #list of current items in the grid
-    CURRENT_ITEMS.append(sword_1)
-    CURRENT_ITEMS.append(shield_1)
-    CURRENT_ITEMS.append(sword_2)
+    current_items_list = [] #list of current items in the grid
+    current_items_list.append(sword_1)
+    current_items_list.append(shield_1)
+    current_items_list.append(sword_2)
 
-    CURRENT_ITEM = None
+    current_item = None
 
     holding = False
+    #############################################################################################
+    # currently spawns items in to last button 
+    for item in current_items_list:
+        for button in MERGE_BUTTON_LIST:
+            if button.has_item == False:
+                item.rect.center = button.rect.center
+    ############################################################################################################
     while True:
 
         mouse = pygame.mouse.get_pos()
@@ -97,42 +104,59 @@ def game_loop():
             button.brighten(mouse)
             pygame.draw.rect(screen, button.current_color, button.rect)
 
+        
+
         # exits game if you click the X in top right
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                for item in CURRENT_ITEMS:
+                for item in current_items_list:
                     if item.rect.collidepoint(event.pos) and holding == False:
                         item.moving = True
-                        CURRENT_ITEM = item
-                        CURRENT_ITEMS.remove(item)
-                        CURRENT_ITEMS.insert(0, item)
-                        print(CURRENT_ITEMS)
+                        current_item = item # makes the item you click the current item
+                        # makes item clicked go to front of the list
+                        current_items_list.remove(item)
+                        current_items_list.insert(0, item)
                         holding = True
+                        position_on_mousedown = item.rect.center
+                        ################################################################
+                        for button in MERGE_BUTTON_LIST:
+                            if button.hovered(mouse):
+                                button_on_mousedown = MERGE_BUTTON_LIST.index(button) # gets the index of button clicked on 
+                                print(button_on_mousedown)
+                        #################################################################
+                        
             elif event.type == pygame.MOUSEMOTION:
-                for item in CURRENT_ITEMS:
+                for item in current_items_list:
                     if item.moving:
                             #moves sword relative distance mouse moves
                             #sword_rect.move_ip(event.rel)
                         # makes the sword center the same as mouse position
                         item.rect.center = pygame.mouse.get_pos()
-                        ###################################################################################### finished changing moving and stuff before ths line
             elif event.type == pygame.MOUSEBUTTONUP:
-                if CURRENT_ITEM != None:
-                    # if mouse button release and sword was moving, make the sword rect snap to center of the button
-                    for button in MERGE_BUTTON_LIST:
-                        if button.hovered(mouse) and CURRENT_ITEM.moving:
-                            CURRENT_ITEM.rect.center = button.rect.center
-                            CURRENT_ITEM.moving = False
-                            CURRENT_ITEM = None
-                            holding = False
+                if current_item != None: # if there is an item clicked 
+                    current_item.rect.center = position_on_mousedown # the item goes back to where you picked it up
+                    position_i_want = position_on_mousedown # defaults position i want to where i picked it up
+                    holding = False # an item isn't being held anymore
+                    for button in MERGE_BUTTON_LIST: # check every button
+                        if button.hovered(mouse) and current_item.moving and button.has_item == False: # to see if the button is hovered, there's an item moving, and the button has_item
+                            position_i_want = button.rect.center # updates position i want to the button position
+                            holding = False # nothing is being held anymore
+                            button.has_item = True # say the button has_item
+                    current_item.rect.center = position_i_want  # moves the item to the position i want 
+                    ################################################################## 
+                    # currently breaks if items dont start on a button
+                    if current_item.rect.center != position_on_mousedown:  # if item position isnt same as when it was picked up
+                        MERGE_BUTTON_LIST[button_on_mousedown].has_item = False # say the button it was on before doesn't have item anymore
 
-                            # TODO currently moves sword to every button until above if stops the moving in specific button you let go
-                            # need to make sword snap back to last button it was on if mouse up not on a box
-
+                    for button in MERGE_BUTTON_LIST: #testing
+                        print(button.has_item) #testing
+                    ##################################################################    
+                    current_item.moving = False 
+                    current_item = None
         # spawns sword on screen, last one drawn gets put on top
-        for item in CURRENT_ITEMS[::-1]:
+        for item in current_items_list[::-1]:
             screen.blit(item.image, item.rect) 
 
         # draws border around sword
@@ -148,6 +172,8 @@ def game_loop():
 game_loop()
 
 """
-currently both the sword get picked up at the same time, might pick up all items that are clicked on later lmao.
-also need to figure out how to spawn the swords on the next empty button in the grid.
+TODO need to make only 1 item per button
+    need to make it so when item is moving and button up outside of button, item snaps back where it was
+    make it so if one item is dragged on top of another item, they swap places
+    make it so two of same item dragged on top of eachother get deleted and new item of lvl+1 appears
 """

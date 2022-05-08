@@ -1,3 +1,4 @@
+from queue import Empty
 import sys
 import pygame
 
@@ -14,6 +15,7 @@ class Button(object):
         self.bright_color = bright_color
         self.rect = rect
         self.current_color = self.base_color
+        self.has_item = False
 
     """def draw(self, win):
         pygame.draw.rect(win, self.base_color, self.bright_color, self.rect)"""
