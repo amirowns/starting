@@ -13,6 +13,7 @@
 import sys
 import pygame
 import Button
+from random import choice
 
 # create a clock to track time
 clock = pygame.time.Clock()
@@ -38,6 +39,9 @@ screen = pygame.display.set_mode(screen_size)
 
 # add window caption
 pygame.display.set_caption('Another Idle Game')
+    
+current_items_list = [] #list of current items in the grid
+MERGE_BUTTON_LIST = []
 
 class Item():
     def __init__(self, item_type, item_level, image_location):
@@ -53,10 +57,32 @@ class Item():
     def __str__(self):
         return f"level {self.item_level} {self.item_type}, rect = {self.rect}, moving? {self.moving}."
     
-# images used
-sword_1 = Item("sword", 1, "VSC_folder/pictures/sword1.png")
-shield_1 = Item("shield", 1, "VSC_folder/pictures/shield1.png")
-sword_2 = Item("sword", 1, "VSC_folder/pictures/sword1.png")
+def drop_table():
+    for button in MERGE_BUTTON_LIST:
+        if button.has_item == False:
+            RNGesus = choice(range(1, 10))
+            if RNGesus >1:
+                if RNGesus >5:
+                    new_drop = Item("sword", 1, "VSC_folder/pictures/sword1.png")
+                    current_items_list.append(new_drop) # make a new lvl 1 sword
+
+                elif RNGesus >1:
+                    new_drop = Item("shield", 1, "VSC_folder/pictures/shield1.png")
+                    current_items_list.append(new_drop) # make a new lvl 1 shield
+                print(new_drop)
+            else:
+                new_drop = None
+                
+            if new_drop != None:
+                for button in MERGE_BUTTON_LIST:
+                    if button.has_item == False:
+                        new_drop.rect.center = button.rect.center
+                        button.has_item = True
+                        break
+            break
+
+def merge_item():
+
 
 # set up font and text; size=25, bold=True, italic=False
 smallText = pygame.font.SysFont("Arial", 25, True, False)
@@ -73,17 +99,21 @@ def game_loop():
     ROW_ONE = DISPLAY_HEIGHT * 0.6
     BOX_DIMENSION = 32
     MOVE_OVER = BOX_DIMENSION + 2
-    MERGE_BUTTON_LIST = []
     
     # MAKES GRID OF BUTTONS :D
-    for y in range(3): # columns
-        for x in range(3): # rows
+    for y in range(6): # columns
+        for x in range(6): # rows
             MERGE_BUTTON_LIST.append(Button.Button(RED, BRIGHT_RED, pygame.Rect((COLUMN_ONE + (x * MOVE_OVER)), (ROW_ONE + (y * MOVE_OVER)), BOX_DIMENSION, BOX_DIMENSION)))
-    current_items_list = [] #list of current items in the grid
-    current_items_list.append(sword_1)
-    current_items_list.append(shield_1)
-    current_items_list.append(sword_2)
-
+    
+    
+    # starting items
+    current_items_list.append(Item("sword", 1, "VSC_folder/pictures/sword1.png"))
+    current_items_list.append(Item("shield", 1, "VSC_folder/pictures/shield1.png"))
+    current_items_list.append(Item("sword", 1, "VSC_folder/pictures/sword1.png"))
+    
+    #################################################
+    # if sword on drop table gets rolled:
+ 
     current_item = None
     switched_item = None
 
@@ -118,19 +148,22 @@ def game_loop():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                for item in current_items_list:
-                    if item.rect.collidepoint(event.pos) and holding == False:
-                        holding = True
-                        item.moving = True
-                        current_item = item # makes the item you click the current item
-                        # makes item clicked go to front of the list
-                        current_items_list.remove(item)
-                        current_items_list.insert(0, item)
-                        position_on_mousedown = item.rect.center
-                        # for gtting button on mousedown
-                        for button in MERGE_BUTTON_LIST:
-                            if button.hovered(mouse):
-                                button_on_mousedown = MERGE_BUTTON_LIST.index(button) # gets the index of button clicked on 
+                if event.button == 1: # left click
+                    for item in current_items_list:
+                        if item.rect.collidepoint(event.pos) and holding == False:
+                            holding = True
+                            item.moving = True
+                            current_item = item # makes the item you click the current item
+                            # makes item clicked go to front of the list
+                            current_items_list.remove(item)
+                            current_items_list.insert(0, item)
+                            position_on_mousedown = item.rect.center
+                            # for gtting button on mousedown
+                            for button in MERGE_BUTTON_LIST:
+                                if button.hovered(mouse):
+                                    button_on_mousedown = MERGE_BUTTON_LIST.index(button) # gets the index of button clicked on 
+                if event.button == 3: # right click
+                    drop_table()
                         
                         
             elif event.type == pygame.MOUSEMOTION:
@@ -175,6 +208,7 @@ def game_loop():
         for item in current_items_list[::-1]:
             screen.blit(item.image, item.rect)
 
+
         # draws border around sword
         #pygame.draw.rect(screen, YELLOW, sword_rect, 1, 5)
 
@@ -189,6 +223,7 @@ game_loop()
 """
 TODO 
     
-    make it so if one item is dragged on top of another item, they swap places
+    be able to easily make multiple of same item
     make it so two of same item dragged on top of eachother get deleted and new item of lvl+1 appears
+
 """
