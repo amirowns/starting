@@ -82,7 +82,7 @@ def drop_table():
             break
 
 def merge_item():
-
+    pass
 
 # set up font and text; size=25, bold=True, italic=False
 smallText = pygame.font.SysFont("Arial", 25, True, False)
