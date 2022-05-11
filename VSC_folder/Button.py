@@ -1,4 +1,4 @@
-from queue import Empty
+
 import sys
 import pygame
 

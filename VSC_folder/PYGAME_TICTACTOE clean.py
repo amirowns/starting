@@ -42,7 +42,7 @@ def text_objects(text, font):
     return textSurface, textSurface.get_rect()
 
 # puts large text in middle of screen
-def message_display(text):
+def message_display(text, font):
     largeText = pygame.font.SysFont('Arial', 100, True, False)
     TextSurf, TextRect = text_objects(text, largeText)
     TextRect.center = ((display_width/2), (display_height/2))
