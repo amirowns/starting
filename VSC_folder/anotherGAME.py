@@ -14,7 +14,7 @@ import sys
 import pygame
 import Button
 from random import choice
-
+import json
 # create a clock to track time
 clock = pygame.time.Clock()
 
@@ -36,6 +36,7 @@ DISPLAY_WIDTH = 600
 DISPLAY_HEIGHT = 800
 screen_size = (DISPLAY_WIDTH, DISPLAY_HEIGHT)
 screen = pygame.display.set_mode(screen_size)
+screen_rect = screen.get_rect()
 
 # add window caption
 pygame.display.set_caption('Another Idle Game')
@@ -62,6 +63,31 @@ class Item():
 
     def __str__(self):
         return f"level {self.item_level} {self.item_type}, rect = {self.rect}, moving? {self.moving}."
+"""
+    def toJSON(self):
+        jsonDATA = {}
+        itemStats = {}
+        itemStatsList = []
+
+        itemStats["item_type"] = self.item_type
+        itemStats["item_level"] = self.item_level
+        itemStats["image_location"] = self.image_location
+
+        jsonDATA["Items"] = itemStats
+
+        return json.dumps(itemStats)
+"""
+def saveItems():
+    json_string = json.dumps([(item.item_type, item.item_level, item.image_location) for item in current_items_list])
+
+    with open("Save_file.json", "w") as f:
+        f.write(json_string)
+
+def loadItems():
+    with open("Save_file.json", "r") as f:
+        itemStats = json.load(f)
+        for item in itemStats:
+            current_items_list.append(Item(item[0], item[1], item[2]))
 
 def drop_table():
     for button in MERGE_BUTTON_LIST:
@@ -88,6 +114,10 @@ def drop_table():
 def merge_item():
     pass
 
+def starting_items():
+    # starting items
+    current_items_list.append(Item("sword", 1, "VSC_folder/pictures/sword1.png"))
+    current_items_list.append(Item("shield", 1, "VSC_folder/pictures/shield1.png"))
 
 def game_intro():
 
@@ -97,10 +127,10 @@ def game_intro():
     screen.fill(BLACK)
     #message_display("Idle Game")
 
-
-    # make buttons
-    MM_Button_list.append(Button.TTTButton("Start", GREEN, BRIGHT_GREEN, medText, pygame.Rect(DISPLAY_WIDTH * 0.2, DISPLAY_HEIGHT * .75, DISPLAY_WIDTH * 0.2, DISPLAY_HEIGHT * 0.1)))
-    MM_Button_list.append(Button.TTTButton("Quit", RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0.6, DISPLAY_HEIGHT * .75, DISPLAY_WIDTH * 0.2, DISPLAY_HEIGHT * 0.1)))
+    # make buttons and add them to MM_Button_list
+    MM_Button_list.append(Button.TTTButton("New Game", GREEN, BRIGHT_GREEN, medText, pygame.Rect(DISPLAY_WIDTH * 0.4, DISPLAY_HEIGHT * .35, DISPLAY_WIDTH * 0.2, DISPLAY_HEIGHT * 0.1)))
+    MM_Button_list.append(Button.TTTButton("Continue", GREEN, BRIGHT_GREEN, medText, pygame.Rect(DISPLAY_WIDTH * 0.4, DISPLAY_HEIGHT * .55, DISPLAY_WIDTH * 0.2, DISPLAY_HEIGHT * 0.1)))
+    MM_Button_list.append(Button.TTTButton("Quit", RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0.4, DISPLAY_HEIGHT * .75, DISPLAY_WIDTH * 0.2, DISPLAY_HEIGHT * 0.1)))
 
     while intro:
 
@@ -111,9 +141,14 @@ def game_intro():
             elif event.type == pygame.MOUSEBUTTONUP:
                 for button in MM_Button_list:
                     if button.hovered(mouse):
-                        if button.text == "Start":
+                        if button.text == "New Game":
+                            # open new game file
+                            starting_items()
                             game_loop()
-                            break
+                        elif button.text == "Continue":
+                            # open the save file
+                            loadItems()
+                            game_loop()
                         elif button.text == "Quit":
                             sys.exit()    
             else: 
@@ -147,11 +182,6 @@ def game_loop():
             MERGE_BUTTON_LIST.append(Button.Button(RED, BRIGHT_RED, pygame.Rect((COLUMN_ONE + (x * MOVE_OVER)), (ROW_ONE + (y * MOVE_OVER)), BOX_DIMENSION, BOX_DIMENSION)))
     
     SCREEN_BUTTON_LIST.append(Button.TTTButton("Sort", RED, BRIGHT_RED, medText, pygame.Rect(COLUMN_ONE, ROW_ONE + (7 * MOVE_OVER), BOX_DIMENSION * 2, BOX_DIMENSION)))
-    
-    # starting items
-    current_items_list.append(Item("sword", 1, "VSC_folder/pictures/sword1.png"))
-    current_items_list.append(Item("shield", 1, "VSC_folder/pictures/shield1.png"))
-    current_items_list.append(Item("sword", 1, "VSC_folder/pictures/sword1.png"))
     
 
     #################################################
@@ -194,6 +224,7 @@ def game_loop():
         # exits game if you click the X in top right
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                saveItems()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # left click
@@ -212,6 +243,7 @@ def game_loop():
                                     button_on_mousedown = MERGE_BUTTON_LIST.index(button) # gets the index of button clicked on 
                 elif event.button == 3: # right click
                     drop_table()
+                    saveItems()
 
             elif event.type == pygame.MOUSEMOTION:
                 for item in current_items_list:
