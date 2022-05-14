@@ -12,9 +12,11 @@
 
 import sys
 import pygame
+from threading import Timer
 import Button
 from random import choice
 import json
+import entities
 # create a clock to track time
 clock = pygame.time.Clock()
 
@@ -44,11 +46,15 @@ pygame.display.set_caption('Another Idle Game')
 current_items_list = [] #list of current items in the grid
 MERGE_BUTTON_LIST = []
 SCREEN_BUTTON_LIST = []
-
+player_stats_button_list = []
 # set up font and text; size=25, bold=True, italic=False
 smallText = pygame.font.SysFont("Arial", 10, True, False)
 medText = pygame.font.SysFont('Arial', 25, True, False)
 largeText = pygame.font.SysFont('Arial', 100, True, False)
+
+def create_text(x, y, font, text, text_color, background_color=None):
+    text_surface = font.render(text, False, text_color, background_color)
+    screen.blit(text_surface, (x, y))
 
 class Item():
     def __init__(self, item_type, item_level, image_location):
@@ -63,23 +69,10 @@ class Item():
 
     def __str__(self):
         return f"level {self.item_level} {self.item_type}, rect = {self.rect}, moving? {self.moving}."
-"""
-    def toJSON(self):
-        jsonDATA = {}
-        itemStats = {}
-        itemStatsList = []
 
-        itemStats["item_type"] = self.item_type
-        itemStats["item_level"] = self.item_level
-        itemStats["image_location"] = self.image_location
-
-        jsonDATA["Items"] = itemStats
-
-        return json.dumps(itemStats)
-"""
 def saveItems():
     json_string = json.dumps([(item.item_type, item.item_level, item.image_location) for item in current_items_list])
-
+    print(json_string)
     with open("Save_file.json", "w") as f:
         f.write(json_string)
 
@@ -119,6 +112,19 @@ def starting_items():
     current_items_list.append(Item("sword", 1, "VSC_folder/pictures/sword1.png"))
     current_items_list.append(Item("shield", 1, "VSC_folder/pictures/shield1.png"))
 
+def blit_text(what):
+    textSurf, textRect = what.text_objects
+    textRect.center = (what.rect.center)
+    screen.blit(textSurf, textRect)
+
+def attack_other(attacker, defender):
+    if attacker.attack > defender.defense:
+        defender.current_health -= (attacker.attack - defender.defense)  
+
+def hovered_by_mouse(thing_being_hovered):
+    mouse = pygame.mouse.get_pos()
+    return thing_being_hovered.rect.collidepoint(mouse)
+
 def game_intro():
 
     intro = True
@@ -140,7 +146,7 @@ def game_intro():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONUP:
                 for button in MM_Button_list:
-                    if button.hovered(mouse):
+                    if hovered_by_mouse(button):
                         if button.text == "New Game":
                             # open new game file
                             starting_items()
@@ -157,19 +163,15 @@ def game_intro():
         for button in MM_Button_list:
             button.brighten(mouse)
             pygame.draw.rect(screen, button.current_color, button.rect)
-            textSurf, textRect = button.text_objects
-            textRect.center = (button.rect.center)
-            screen.blit(textSurf, textRect)
+            blit_text(button)
 
         pygame.display.update()
         clock.tick(15)
 ################################################################################################################
 def game_loop():
-
-
     # gets the mouse position
     mouse = pygame.mouse.get_pos()
-
+    timer = 0
     # grid starting pos
     COLUMN_ONE = DISPLAY_WIDTH * 1/4
     ROW_ONE = DISPLAY_HEIGHT * 0.6
@@ -183,15 +185,31 @@ def game_loop():
     
     SCREEN_BUTTON_LIST.append(Button.TTTButton("Sort", RED, BRIGHT_RED, medText, pygame.Rect(COLUMN_ONE, ROW_ONE + (7 * MOVE_OVER), BOX_DIMENSION * 2, BOX_DIMENSION)))
     
+    # makes the player object with stats
+    player = entities.Player()
+    goblin = entities.Goblin()
 
-    #################################################
-    # if sword on drop table gets rolled:
- 
+    current_enemy = goblin
+    
+    # makes player stat buttons and adds em to list
+    # could potentially make normal button for hp, and another button for the text of hp so the text doesnt move
+    player_health = Button.TTTButton(f"HP: {player.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(player.rect.x, player.rect.top - 30, (player.current_health / player.max_health * player.rect.width), 20))
+    player_stats_button_list.append(player_health)
+    player_attack = Button.TTTButton(f"ATK: {player.attack}", LIGHT_GRAY, LIGHT_GRAY, smallText, pygame.Rect(player.rect.x, player.rect.bottom + 10, player.rect.width, 20))
+    player_stats_button_list.append(player_attack)
+    player_defense = Button.TTTButton(f"DEF: {player.defense}", LIGHT_GRAY, LIGHT_GRAY, smallText, pygame.Rect(player.rect.x, player.rect.bottom + 10 + 30, player.rect.width, 20))
+    player_stats_button_list.append(player_defense)
+
+    # enemy stats
+    enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+    """
+    for button in player_stats_button_list:
+        pygame.draw.rect(screen, YELLOW, button.rect, 1)
+    """
     current_item = None
     switched_item = None
-
     holding = False
-    #############################################################################################
+    counter = 0
     # if button is not full, spawn item at button location and make button have item
     for item in current_items_list:
         for button in MERGE_BUTTON_LIST:
@@ -199,33 +217,35 @@ def game_loop():
                 item.rect.center = button.rect.center
                 button.has_item = True
                 break
+
+    
     ############################################################################################################
     while True:
 
         mouse = pygame.mouse.get_pos()
         # fills screen so old swords get covered
-        screen.fill(BLACK)
+        screen.fill(DARK_GRAY)
 
         # bottom half of screen is dark gray
-        pygame.draw.rect(screen, DARK_GRAY, (0, DISPLAY_HEIGHT/2, DISPLAY_WIDTH, DISPLAY_HEIGHT/2))
+        #pygame.draw.rect(screen, DARK_GRAY, (0, DISPLAY_HEIGHT/2, DISPLAY_WIDTH, DISPLAY_HEIGHT/2))
 
         # buttons
         for button in MERGE_BUTTON_LIST:
             button.brighten(mouse)
             pygame.draw.rect(screen, button.current_color, button.rect)
+            pygame.draw.rect(screen, BLACK, button.rect, 1)
 
         for button in SCREEN_BUTTON_LIST:
             button.brighten(mouse)
             pygame.draw.rect(screen, button.current_color, button.rect)
-            textSurf, textRect = button.text_objects
-            textRect.center = (button.rect.center)
-            screen.blit(textSurf, textRect)
+            blit_text(button)
 
         # exits game if you click the X in top right
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 saveItems()
                 sys.exit()
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # left click
                     for item in current_items_list:
@@ -239,12 +259,38 @@ def game_loop():
                             position_on_mousedown = item.rect.center
                             # for gtting button on mousedown
                             for button in MERGE_BUTTON_LIST:
-                                if button.hovered(mouse):
+                                if hovered_by_mouse(button):
                                     button_on_mousedown = MERGE_BUTTON_LIST.index(button) # gets the index of button clicked on 
+
                 elif event.button == 3: # right click
                     drop_table()
-                    saveItems()
 
+                elif event.button ==2: # middle mouse button
+                    if player.current_health > 0:
+                        attack_other(player, current_enemy)
+                        enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+                        if current_enemy.current_health > 0:
+                            attack_other(current_enemy, player)
+                            player_stats_button_list.remove(player_health)
+                            player_health = Button.TTTButton(f"HP: {player.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(player.rect.x, player.rect.top - 30, (player.current_health / player.max_health * player.rect.width), 20))
+                            player_stats_button_list.append(player_health)
+                        elif current_enemy.current_health <= 0:
+                            drop_table()
+                            counter += 1
+                            print(counter)
+                            current_enemy.current_health = current_enemy.max_health
+                            enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+                    elif player.current_health <= 0:
+                        counter = 0
+
+                        current_enemy.current_health = current_enemy.max_health
+                        enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+                        
+                        player_stats_button_list.remove(player_health)
+                        player.current_health = player.max_health
+                        player_health = Button.TTTButton(f"HP: {player.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(player.rect.x, player.rect.top - 30, (player.current_health / player.max_health * player.rect.width), 20))
+                        player_stats_button_list.append(player_health)
+                        
             elif event.type == pygame.MOUSEMOTION:
                 for item in current_items_list:
                     if item.moving:
@@ -252,6 +298,7 @@ def game_loop():
                             #sword_rect.move_ip(event.rel)
                         # makes the sword center the same as mouse position
                         item.rect.center = pygame.mouse.get_pos()
+
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1: # left click
                     if current_item != None: # if there is an item clicked 
@@ -259,7 +306,7 @@ def game_loop():
                         #current_item.rect.center = position_on_mousedown # the item goes back to where you picked it up
                         position_i_want = position_on_mousedown # defaults position i want to where i picked it up
                         for button in MERGE_BUTTON_LIST: # check every button
-                            if button.hovered(mouse) and current_item.moving: # to see if the button is hovered, there's an item moving
+                            if hovered_by_mouse(button) and current_item.moving: # to see if the button is hovered, there's an item moving
                                 position_i_want = button.rect.center # updates position i want to the button position
                                 if button.has_item == False: # if the button is empty
                                     button.has_item = True # say the button has_item
@@ -270,7 +317,6 @@ def game_loop():
                                             switched_item.rect.center = MERGE_BUTTON_LIST[button_on_mousedown].rect.center # and move that item to the mousedown location
                         current_item.rect.center = position_i_want  # moves the item to the position i want 
 
-                        ################################################################## 
                         # currently breaks if items dont start on a button
                         if current_item.rect.center != position_on_mousedown and switched_item == None:  # if item position isnt same as when it was picked up and not switching items
                             try:
@@ -278,7 +324,6 @@ def game_loop():
                             except:
                                 pass
                         
-                        ##################################################################    
                         current_item.moving = False 
                         # if both the items are the same type and level, delete both of them, and make an item of level+1
                         if current_item != None and switched_item != None and current_item != switched_item:
@@ -295,9 +340,9 @@ def game_loop():
 
                         current_item = None
                         switched_item = None
-                                    # attempt at sorting but its failing and idk why
+
                     for button in SCREEN_BUTTON_LIST:
-                        if button.hovered(mouse):
+                        if hovered_by_mouse(button):
                             current_items_list.sort(key = lambda x: x.item_level, reverse = True) # sort by highest item level first
                             current_items_list.sort(key = lambda x: x.item_type) # sort by type of item
                             # need to move items to correct locations now
@@ -311,20 +356,58 @@ def game_loop():
                                         item.rect.center = button.rect.center
                                         button.has_item = True
                                         break
+        
 
-        """
-        # draws border around items
-        for item in current_items_list:
-            pygame.draw.rect(screen, YELLOW, item.rect, 1, 5)
-        """
-        for button in MERGE_BUTTON_LIST:
-            pygame.draw.rect(screen, BLACK, button.rect, 1)
+
+        if pygame.time.get_ticks() - timer> 1500:
+            timer = pygame.time.get_ticks()
+            if player.current_health > 0:
+                attack_other(player, current_enemy)
+                enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+                if current_enemy.current_health > 0:
+                    attack_other(current_enemy, player)
+                    player_stats_button_list.remove(player_health)
+                    player_health = Button.TTTButton(f"HP: {player.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(player.rect.x, player.rect.top - 30, (player.current_health / player.max_health * player.rect.width), 20))
+                    player_stats_button_list.append(player_health)
+                elif current_enemy.current_health <= 0:
+                    drop_table()
+                    counter += 1
+                    print(counter)
+                    current_enemy.current_health = current_enemy.max_health
+                    enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+            elif player.current_health <= 0:
+                counter = 0
+
+                current_enemy.current_health = current_enemy.max_health
+                enemy_health = Button.TTTButton(f"HP: {current_enemy.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(current_enemy.rect.x, current_enemy.rect.top - 30, (current_enemy.current_health / current_enemy.max_health * current_enemy.rect.width), 20))
+                
+                player_stats_button_list.remove(player_health)
+                player.current_health = player.max_health
+                player_health = Button.TTTButton(f"HP: {player.current_health}", BRIGHT_RED, BRIGHT_RED, smallText, pygame.Rect(player.rect.x, player.rect.top - 30, (player.current_health / player.max_health * player.rect.width), 20))
+                player_stats_button_list.append(player_health)
+
+        # draws the player and enemy
+        screen.blit(player.image, player.rect)
+        screen.blit(current_enemy.image, current_enemy.rect)
+
+        # draws goblin hp bar
+        pygame.draw.rect(screen, enemy_health.current_color, enemy_health.rect)
+        blit_text(enemy_health)
+
+        # draws player stat buttons
+        for button in player_stats_button_list:
+            pygame.draw.rect(screen, button.current_color, button.rect)
+            blit_text(button)
+
+        # max hp bar outline doesnt move
+        pygame.draw.rect(screen, YELLOW, (player.rect.x, player.rect.top - 30, player.rect.width, 20), 1)
+        pygame.draw.rect(screen, YELLOW, (current_enemy.rect.x, current_enemy.rect.top - 30, current_enemy.rect.width, 20), 1)
 
         # spawns sword on screen, last one drawn gets put on top
         for item in current_items_list[::-1]:
             screen.blit(item.image, item.rect)
-            text_surface = smallText.render(f'{item.item_level}', False, WHITE, BLACK)
-            screen.blit(text_surface, (item.rect.x + 2, item.rect.y))
+            create_text(item.rect.x + 2, item.rect.y, smallText, f'{item.item_level}', WHITE, BLACK)
+
         # updates stuff on display
         pygame.display.update()
 

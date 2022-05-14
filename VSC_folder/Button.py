@@ -23,8 +23,6 @@ class Button(object):
     """def draw(self, win):
         pygame.draw.rect(win, self.base_color, self.bright_color, self.rect)"""
 
-
-
     # checks if the button is being hovered
     def hovered(self, mouse):
         return self.rect.collidepoint(mouse)
@@ -55,6 +53,10 @@ class TTTButton(Button):
         self.rect = rect
         self.current_color = self.base_color
         self.text_objects = text_objects(text, font)
+        self.has_item = False
+
+    def __str__(self):
+        return f"Button: text = {self.text}, base_color = {self.base_color}, bright_color = {self.bright_color}, rect = {self.rect}, has item? {self.has_item}"
 
     # puts text in the button
     def Add_text_to_button(self, text):
