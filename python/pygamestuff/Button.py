@@ -46,12 +46,9 @@ class Button(object):
 
 class TTTButton(Button):
     def __init__(self, text, base_color, bright_color, font, rect):
+        Button.__init__(self, base_color, bright_color, rect)
         self.text = text
-        self.base_color = base_color
-        self.bright_color = bright_color
         self.font = font
-        self.rect = rect
-        self.current_color = self.base_color
         self.text_objects = text_objects(text, font)
         self.has_item = False
 
