@@ -11,7 +11,7 @@
     # items also get stats that increase character stats
 import sys
 import pygame
-from starting.python.pygamestuff import Button
+import Button
 from random import choice
 import json
 import entities
@@ -67,12 +67,12 @@ class Item():
         self.attack = 0
         self.defense = 0
         if self.item_type == "sword":
-            self.image_location = f"VSC_folder/pictures/sword{self.item_level}.png"
+            self.image_location = f"starting/python/pygamestuff/pictures/sword{self.item_level}.png"
             self.image = pygame.image.load(self.image_location)
             self.image.convert()
             self.attack = self.item_level * 1
         elif self.item_type == "shield":
-            self.image_location = f"VSC_folder/pictures/shield{self.item_level}.png"
+            self.image_location = f"starting/python/pygamestuff/pictures/shield{self.item_level}.png"
             self.image = pygame.image.load(self.image_location)
             self.image.convert()
             self.defense = self.item_level * 1
