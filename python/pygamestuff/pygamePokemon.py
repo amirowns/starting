@@ -1,4 +1,3 @@
-from multiprocessing.connection import wait
 import sys
 import pygame
 import Button
@@ -55,6 +54,9 @@ pygame.display.set_caption('Pokemon??')
 smallText = pygame.font.SysFont("Arial", 10, True, False)
 medText = pygame.font.SysFont('Arial', 25, True, False)
 largeText = pygame.font.SysFont('Arial', 100, True, False)
+
+# only allows certain events
+pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONUP])
 
 wait_time = 0
 went = False
@@ -114,6 +116,7 @@ def game_intro():
 
 def Random_battle():
     Buttonmovelist = []
+    HPbarlist = []
     user_pokemon = Pokemon()
     enemy_pokemon = Pokemon()
     whatthefuck = TypeEffectiveness()
@@ -219,22 +222,34 @@ def Random_battle():
                         howeffectivewasit = "not really effective"
                     create_text(button.rect.centerx, button.rect.centery + 20, smallText, howeffectivewasit, WHITE, None, True)
 
+        def display_HP_bars(who, HPbarcolor, outlinecolor, outlinethickness, x, y, length, height):
+            #create a button that changes size
+            bu = Button.Button(HPbarcolor, HPbarcolor, pygame.Rect(x, y, (who.HPcurrent / who.HPmax * length), height))
+            pygame.draw.rect(screen, bu.current_color, bu.rect)
+            # blit_text(player_health_button)
+            #create an outline
+            pygame.draw.rect(screen, outlinecolor, (x, y, length, height), 1)
+
         def display_everything():
             global move_chosen
 
+
+
             #user
-            create_text(0, 0, medText, f'Level {user_pokemon.Level} {user_pokemon.name} {user_pokemon.SPD}', WHITE, BLACK)
+            create_text(0, 0, medText, f'Level {user_pokemon.Level} {user_pokemon.name}', WHITE, BLACK)
             create_text(0, 30, medText, f'{user_pokemon.type1}', WHITE, pokecolors[user_pokemon.type1])
             if user_pokemon.type2:
                 create_text((DISPLAY_WIDTH * 0.2), 30, medText, f'{user_pokemon.type2}', WHITE, pokecolors[user_pokemon.type2])
             create_text(0, 60, medText, f'HP: {user_pokemon.HPcurrent}', WHITE, RED)
             #enemy
-            create_text((DISPLAY_WIDTH/2), 0, medText, f'Level {enemy_pokemon.Level} {enemy_pokemon.name} {enemy_pokemon.SPD}', WHITE, BLACK)
+            create_text((DISPLAY_WIDTH/2), 0, medText, f'Level {enemy_pokemon.Level} {enemy_pokemon.name}', WHITE, BLACK)
             create_text((DISPLAY_WIDTH/2), 30, medText, f'{enemy_pokemon.type1}', WHITE, pokecolors[enemy_pokemon.type1])
             if enemy_pokemon.type2:
                 create_text((DISPLAY_WIDTH/2) + (DISPLAY_WIDTH * 0.2),30, medText, f'{enemy_pokemon.type2}', WHITE, pokecolors[enemy_pokemon.type2])
             create_text((DISPLAY_WIDTH/2), 60, medText, f'HP: {enemy_pokemon.HPcurrent}', WHITE, RED)
 
+            display_HP_bars(user_pokemon, BRIGHT_RED, YELLOW, 1, 50, 100, 150, 30)
+            display_HP_bars(enemy_pokemon, BRIGHT_RED, YELLOW, 1, (DISPLAY_WIDTH/2) + 50, 100, 150, 30)
             #display fps
             create_text(DISPLAY_WIDTH*0.95, 0, smallText, f'{round(clock.get_fps())}', WHITE, BLACK)
             
@@ -251,4 +266,3 @@ game_intro()
 
 # hp bars at some point
 # sprites at some point
-# make buttons dissapear after selecting move??
