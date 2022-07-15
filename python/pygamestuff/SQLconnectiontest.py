@@ -45,6 +45,53 @@ class Pokemon():
         self.move2 = PokeMove(self.pokeID, self.Level)
         self.move3 = PokeMove(self.pokeID, self.Level)
         self.move4 = PokeMove(self.pokeID, self.Level)
+
+        self.movelist = [self.move1, self.move2, self.move3, self.move4]
+
+        self.selected_move = None
+        self.damage = None
+        self.howeffectivewasit = None
+
+    def select_player_move(self, move):
+        self.selected_move = move
+
+    def select_enemy_move(self):
+        # pick a random move
+        x = choice(range(1, 4))
+        self.selected_move = self.movelist[x - 1] # picks a random move from the movelist
+
+    def attack(self, target):
+
+        effectiveness = TypeEffectiveness().calculate_effectiveness(self.selected_move.type, target.type1, target.type2)
+        power = self.selected_move.power
+        targets = 1
+        weather = 1
+        crit = 1 # 6.25% to crit add in later
+        random = choice(range(85, 100)) / 100
+        STAB = 1.5 if self.selected_move.type == self.type1 or self.selected_move.type == self.type2 else 1
+        burn = 1
+
+        if self.selected_move.category == "Physical":
+            self.damage = round(((((((2 * self.Level)/5) * power * (self.ATK/target.DEF))/50) + 2) * targets * weather * crit * random * STAB * burn) * effectiveness)
+        elif self.selected_move.category == "Special":
+            self.damage = round(((((((2 * self.Level)/5) * power * (self.SPATK/target.SPDEF))/50) + 2) * targets * weather * crit * random * STAB * burn) * effectiveness)
+        else:
+            self.damage = 0
+
+        target.HPcurrent -= self.damage
+        if target.HPcurrent < 0:
+            target.HPcurrent = 0
+        # need to update the display text for HP current
+        if effectiveness == 0:
+            self.howeffectivewasit = " The Pokemon was immune!"
+        elif effectiveness > 1:
+            self.howeffectivewasit = " It was super effective!"
+        elif effectiveness == 1:
+            self.howeffectivewasit = ""
+        elif effectiveness < 1:
+            self.howeffectivewasit = " It was not really effective."  
+        
+        
         
     def __str__(self):
         return f'{self.name}, {self.type1}, {self.type2}, HP:{self.HP}, ATK:{self.ATK}, DEF:{self.DEF}, SPATK:{self.SPATK}, SPDEF:{self.SPDEF}, SPD:{self.SPD}'
@@ -94,12 +141,12 @@ class PokeMove():
             #self.accuracy = int(row[6])
             self.accuracy = 1
         else:
-            self.name = "N/A"
+            self.name = "Struggle"
             self.type = "Normal"
-            self.category = None
-            self.pp = None
-            self.power = None
-            self.accuracy = None
+            self.category = "Physical"
+            self.pp = 1
+            self.power = 50
+            self.accuracy = 1
 
     def __str__(self):
         return f'{self.name}, {self.type}, {self.category}, PP: {self.pp}, Power: {self.power}, Acc: {self.accuracy}'
@@ -114,7 +161,7 @@ class TypeEffectiveness():
             self.Effectivenessdict[i[1:3]] = i[3]
     
     def calculate_effectiveness(self, moveType, defenderType1, defenderType2):
-        # attacker uses selected move TYPE
+        # self uses selected move TYPE
         # defender uses pokemon TYPE
         # if the pokemon has 2 types?
 

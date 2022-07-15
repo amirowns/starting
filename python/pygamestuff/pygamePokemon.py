@@ -1,5 +1,4 @@
-from cgitb import text
-from pickle import TRUE
+from multiprocessing.connection import wait
 import sys
 import pygame
 import Button
@@ -57,6 +56,10 @@ smallText = pygame.font.SysFont("Arial", 10, True, False)
 medText = pygame.font.SysFont('Arial', 25, True, False)
 largeText = pygame.font.SysFont('Arial', 100, True, False)
 
+wait_time = 0
+went = False
+move_chosen = False
+
 
 def create_text(x, y, font, text, text_color, background_color=None, centered=False):
     text_surface = font.render(text, False, text_color, background_color)
@@ -74,6 +77,7 @@ def blit_text(what):
 def hovered_by_mouse(thing_being_hovered):
     mouse = pygame.mouse.get_pos()
     return thing_being_hovered.rect.collidepoint(mouse)
+    
 
 def game_intro():
 
@@ -94,12 +98,10 @@ def game_intro():
                 for button in MM_Button_list:
                     if hovered_by_mouse(button):
                         if button.text == "Battle":
-                            intro = False
+                            #intro = False
                             Random_battle()
                         elif button.text == "Quit":
                             sys.exit()
-            else: 
-                pass
         # "runs" the buttons
         for button in MM_Button_list:
             mouse = pygame.mouse.get_pos()
@@ -115,115 +117,81 @@ def Random_battle():
     user_pokemon = Pokemon()
     enemy_pokemon = Pokemon()
     whatthefuck = TypeEffectiveness()
-    move_chosen = False
     intro = True
-
+    global move_chosen
+    global wait_time
 
     while intro == True:
         screen.fill(DARK_GRAY)
-        mouse = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONUP:
                 for button in Buttonmovelist:
                     if hovered_by_mouse(button):
-                        if button.text == user_pokemon.move1.name:
-                            user_move = user_pokemon.move1
-                            move_chosen = True
-                        elif button.text == user_pokemon.move2.name:
-                            user_move = user_pokemon.move2
-                            move_chosen = True
-                        elif button.text == user_pokemon.move3.name:
-                            user_move = user_pokemon.move3
-                            move_chosen = True
-                        elif button.text == user_pokemon.move4.name:
-                            user_move = user_pokemon.move4
-                            move_chosen = True
+                        for move in user_pokemon.movelist:
+                            if button.text == move.name:
+                                user_pokemon.select_player_move(move)
+                                enemy_pokemon.select_enemy_move()
+                                move_chosen = True
+                                Buttonmovelist = []
+                                wait_time = pygame.time.get_ticks()
 
         def check_for_pokemon_death():
+            global move_chosen # game breaks when pokemon dies because move_chosen is still true
 
             if user_pokemon.HPcurrent <= 0:
                 create_text(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, medText, 'You Fainted', WHITE, BLACK, True)
                 
                 pygame.display.update()
                 pygame.time.wait(2000)
+                move_chosen = False
                 game_intro()
                 
             elif enemy_pokemon.HPcurrent <= 0:
                 create_text(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, medText, 'You Won!', WHITE, BLACK, True)
                 pygame.display.update()
                 pygame.time.wait(2000)
+                move_chosen = False
                 game_intro()
 
-        def attack_other(attacker, defender):
-            if attacker == user_pokemon:
-                
-                selected_move = user_move
-
-            elif attacker == enemy_pokemon:
-                
-                def select_enemy_move():
-                    # pick a random move
-                    x = choice(range(1, 4))
-                    if x == 1:
-                        selected_move = enemy_pokemon.move1
-                    elif x == 2:
-                        selected_move = enemy_pokemon.move2
-                    elif x == 3:
-                        selected_move = enemy_pokemon.move3
-                    elif x == 4:
-                        selected_move = enemy_pokemon.move4
-                    return selected_move
-
-                selected_move = select_enemy_move()
-
-            effectiveness = whatthefuck.calculate_effectiveness(selected_move.type, defender.type1, defender.type2)
-            power = selected_move.power
-            targets = 1
-            weather = 1
-            crit = 1 # 6.25% to crit
-            random = choice(range(85, 100)) / 100
-            STAB = 1.5 if selected_move.type == attacker.type1 or selected_move.type == attacker.type2 else 1
-            burn = 1
-
-            if selected_move.category == "Physical":
-                damage = round(((((((2 * attacker.Level)/5) * power * (attacker.ATK/defender.DEF))/50) + 2) * targets * weather * crit * random * STAB * burn) * effectiveness)
-            elif selected_move.category == "Special":
-                damage = round(((((((2 * attacker.Level)/5) * power * (attacker.SPATK/defender.SPDEF))/50) + 2) * targets * weather * crit * random * STAB * burn) * effectiveness)
-            else:
-                damage = 0
-
-            defender.HPcurrent -= damage
-            # need to update the display text for HP current
-            if effectiveness == 0:
-                howeffectivewasit = " The Pokemon was immune!"
-            if effectiveness > 1:
-                howeffectivewasit = " It was super effective!"
-            elif effectiveness == 1:
-                howeffectivewasit = ""
-            elif effectiveness < 1:
-                howeffectivewasit = " It was not really effective."
-            create_text((DISPLAY_WIDTH/2),(DISPLAY_HEIGHT/2) + 50, smallText, f'{attacker.name} used {selected_move.name} and did {damage} damage.{howeffectivewasit}', WHITE, BLACK, True)
-
-
         def battle(attacker, defender):
+            global wait_time
+            global went
+            global move_chosen
 
+            #who is faster?
+            #user wins tie breakers for rn
             if attacker.SPD >= defender.SPD:
-                attack_other(attacker, defender)
-                check_for_pokemon_death()
-                attack_other(defender, attacker)
+                faster = attacker
+                slower = defender
+            elif defender.SPD > attacker.SPD:
+                faster = defender
+                slower = attacker
 
-            elif defender.SPD >= attacker.SPD:
-                attack_other(defender, attacker)
-                check_for_pokemon_death()
-                attack_other(attacker, defender)
+            if pygame.time.get_ticks() - wait_time <= 4000:
 
-            check_for_pokemon_death()
+                if went == False:
+                    faster.attack(slower)
+                    went = True
+                create_text((DISPLAY_WIDTH/2),(DISPLAY_HEIGHT/2) + 50, smallText, f'{faster.name} used {faster.selected_move.name} and did {faster.damage} damage.{faster.howeffectivewasit}', WHITE, BLACK, True)
+            if pygame.time.get_ticks() - wait_time >= 4000 and pygame.time.get_ticks() - wait_time <= 5000:
+                went = False
+                check_for_pokemon_death()
+            if pygame.time.get_ticks() - wait_time >= 5000 and pygame.time.get_ticks() - wait_time <= 9000:
+
+                if went == False:
+                    slower.attack(faster)
+                    went = True
+                create_text((DISPLAY_WIDTH/2),(DISPLAY_HEIGHT/2) + 100, smallText, f'{slower.name} used {slower.selected_move.name} and did {slower.damage} damage.{slower.howeffectivewasit}', WHITE, BLACK, True)
+            if pygame.time.get_ticks() - wait_time >= 9000:
+                went = False
+                move_chosen = False
+                check_for_pokemon_death()
 
         if move_chosen == True:
+            # Buttonmovelist = []
             battle(user_pokemon, enemy_pokemon)
-            move_chosen = False
 
         def display_pokemoves():
             Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move1.name}', pokecolors[user_pokemon.move1.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.0, DISPLAY_HEIGHT * .8, DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * 0.1)))
@@ -237,18 +205,31 @@ def Random_battle():
                 pygame.draw.rect(screen, button.current_color, button.rect)
                 pygame.draw.rect(screen, BLACK, button.rect, 1)
                 blit_text(button)
+                # displays preview of how effective the move will be before selecting it
+                if hovered_by_mouse(button):
+                    zzz = list(pokecolors.keys())[list(pokecolors.values()).index(button.base_color)]
+                    effectiveness = whatthefuck.calculate_effectiveness(zzz, enemy_pokemon.type1, enemy_pokemon.type2)
+                    if effectiveness == 0:
+                        howeffectivewasit = "immune"
+                    elif effectiveness > 1:
+                        howeffectivewasit = "super effective"
+                    elif effectiveness == 1:
+                        howeffectivewasit = "neutral"
+                    elif effectiveness < 1:
+                        howeffectivewasit = "not really effective"
+                    create_text(button.rect.centerx, button.rect.centery + 20, smallText, howeffectivewasit, WHITE, None, True)
 
-        display_pokemoves()
+        def display_everything():
+            global move_chosen
 
-        def cornerstuff():
             #user
-            create_text(0, 0, medText, f'Level {user_pokemon.Level} {user_pokemon.name}', WHITE, BLACK)
+            create_text(0, 0, medText, f'Level {user_pokemon.Level} {user_pokemon.name} {user_pokemon.SPD}', WHITE, BLACK)
             create_text(0, 30, medText, f'{user_pokemon.type1}', WHITE, pokecolors[user_pokemon.type1])
             if user_pokemon.type2:
                 create_text((DISPLAY_WIDTH * 0.2), 30, medText, f'{user_pokemon.type2}', WHITE, pokecolors[user_pokemon.type2])
             create_text(0, 60, medText, f'HP: {user_pokemon.HPcurrent}', WHITE, RED)
             #enemy
-            create_text((DISPLAY_WIDTH/2), 0, medText, f'Level {enemy_pokemon.Level} {enemy_pokemon.name}', WHITE, BLACK)
+            create_text((DISPLAY_WIDTH/2), 0, medText, f'Level {enemy_pokemon.Level} {enemy_pokemon.name} {enemy_pokemon.SPD}', WHITE, BLACK)
             create_text((DISPLAY_WIDTH/2), 30, medText, f'{enemy_pokemon.type1}', WHITE, pokecolors[enemy_pokemon.type1])
             if enemy_pokemon.type2:
                 create_text((DISPLAY_WIDTH/2) + (DISPLAY_WIDTH * 0.2),30, medText, f'{enemy_pokemon.type2}', WHITE, pokecolors[enemy_pokemon.type2])
@@ -256,11 +237,18 @@ def Random_battle():
 
             #display fps
             create_text(DISPLAY_WIDTH*0.95, 0, smallText, f'{round(clock.get_fps())}', WHITE, BLACK)
+            
+            if move_chosen == False:
+                display_pokemoves()
 
-        cornerstuff()
+            clock.tick(30)
+            pygame.display.update()
 
-        clock.tick(30)
-        pygame.display.update()
+        display_everything()
+
 
 game_intro()
 
+# hp bars at some point
+# sprites at some point
+# make buttons dissapear after selecting move??
