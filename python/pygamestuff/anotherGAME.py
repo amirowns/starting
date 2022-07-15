@@ -11,7 +11,7 @@
     # items also get stats that increase character stats
 import sys
 import pygame
-import Button
+from starting.python.pygamestuff import Button
 from random import choice
 import json
 import entities
