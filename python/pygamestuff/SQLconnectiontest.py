@@ -40,6 +40,7 @@ class Pokemon():
 
         self.HPmax = self.actual_HP
         self.HPcurrent = self.HPmax
+        self.HPtransition = (self.HPcurrent / self.HPmax)
 
         self.move1 = PokeMove(self.pokeID, self.Level)
         self.move2 = PokeMove(self.pokeID, self.Level)

@@ -223,17 +223,22 @@ def Random_battle():
                     create_text(button.rect.centerx, button.rect.centery + 20, smallText, howeffectivewasit, WHITE, None, True)
 
         def display_HP_bars(who, HPbarcolor, outlinecolor, outlinethickness, x, y, length, height):
+            # changing hp bar colors at certain thresholds
+            if who.HPtransition <= 0.1:
+                HPbarcolor = RED
+            elif who.HPtransition <= 0.5:
+                HPbarcolor = YELLOW
+            #slowly change hp bar when damaged
+            if who.HPtransition > (who.HPcurrent / who.HPmax):
+                who.HPtransition -= .01
             #create a button that changes size
-            bu = Button.Button(HPbarcolor, HPbarcolor, pygame.Rect(x, y, (who.HPcurrent / who.HPmax * length), height))
+            bu = Button.Button(HPbarcolor, HPbarcolor, pygame.Rect(x, y, who.HPtransition * length, height))
             pygame.draw.rect(screen, bu.current_color, bu.rect)
-            # blit_text(player_health_button)
             #create an outline
-            pygame.draw.rect(screen, outlinecolor, (x, y, length, height), 1)
+            pygame.draw.rect(screen, outlinecolor, (x, y, length, height), outlinethickness)
 
         def display_everything():
             global move_chosen
-
-
 
             #user
             create_text(0, 0, medText, f'Level {user_pokemon.Level} {user_pokemon.name}', WHITE, BLACK)
@@ -241,20 +246,20 @@ def Random_battle():
             if user_pokemon.type2:
                 create_text((DISPLAY_WIDTH * 0.2), 30, medText, f'{user_pokemon.type2}', WHITE, pokecolors[user_pokemon.type2])
             create_text(0, 60, medText, f'HP: {user_pokemon.HPcurrent}', WHITE, RED)
+            display_HP_bars(user_pokemon, GREEN, YELLOW, 1, 50, 100, 150, 30)
             #enemy
             create_text((DISPLAY_WIDTH/2), 0, medText, f'Level {enemy_pokemon.Level} {enemy_pokemon.name}', WHITE, BLACK)
             create_text((DISPLAY_WIDTH/2), 30, medText, f'{enemy_pokemon.type1}', WHITE, pokecolors[enemy_pokemon.type1])
             if enemy_pokemon.type2:
                 create_text((DISPLAY_WIDTH/2) + (DISPLAY_WIDTH * 0.2),30, medText, f'{enemy_pokemon.type2}', WHITE, pokecolors[enemy_pokemon.type2])
             create_text((DISPLAY_WIDTH/2), 60, medText, f'HP: {enemy_pokemon.HPcurrent}', WHITE, RED)
+            display_HP_bars(enemy_pokemon, GREEN, YELLOW, 1, (DISPLAY_WIDTH/2) + 50, 100, 150, 30)
 
-            display_HP_bars(user_pokemon, BRIGHT_RED, YELLOW, 1, 50, 100, 150, 30)
-            display_HP_bars(enemy_pokemon, BRIGHT_RED, YELLOW, 1, (DISPLAY_WIDTH/2) + 50, 100, 150, 30)
-            #display fps
-            create_text(DISPLAY_WIDTH*0.95, 0, smallText, f'{round(clock.get_fps())}', WHITE, BLACK)
-            
             if move_chosen == False:
                 display_pokemoves()
+            
+            #display fps
+            create_text(DISPLAY_WIDTH*0.95, 0, smallText, f'{round(clock.get_fps())}', WHITE, BLACK)
 
             clock.tick(30)
             pygame.display.update()
@@ -264,5 +269,4 @@ def Random_battle():
 
 game_intro()
 
-# hp bars at some point
 # sprites at some point
