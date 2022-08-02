@@ -3,6 +3,7 @@ import pygame
 import Button
 from SQLconnectiontest import Pokemon
 from SQLconnectiontest import TypeEffectiveness
+from pokemonParty import Party
 from random import choice
 
 # color palette
@@ -57,6 +58,9 @@ largeText = pygame.font.SysFont('Arial', 100, True, False)
 
 # only allows certain events
 pygame.event.set_allowed([pygame.QUIT, pygame.MOUSEBUTTONUP])
+
+length = DISPLAY_WIDTH * 0.4
+height = DISPLAY_HEIGHT * 0.1
 
 wait_time = 0
 went = False
@@ -116,8 +120,13 @@ def game_intro():
 
 def Random_battle():
     Buttonmovelist = []
-    HPbarlist = []
+    Pokemonlist = []
+    Battlemenulist = []
+    MenuButton = Button.TTTButton("Menu", RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0.8, DISPLAY_HEIGHT * 0.8, DISPLAY_WIDTH * 0.4 / 2, DISPLAY_HEIGHT * 0.1 * 2))
+    party = Party()
     user_pokemon = Pokemon()
+    party.add_to_party(user_pokemon)
+    print(user_pokemon.party_slot)
     enemy_pokemon = Pokemon()
     whatthefuck = TypeEffectiveness()
     intro = True
@@ -139,6 +148,43 @@ def Random_battle():
                                 move_chosen = True
                                 Buttonmovelist = []
                                 wait_time = pygame.time.get_ticks()
+                
+                # menu button
+                if hovered_by_mouse(MenuButton) and Battlemenulist != []:
+                    Battlemenulist = []
+                elif hovered_by_mouse(MenuButton):
+                    Battlemenulist.append(Button.TTTButton("Run", RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0.8, DISPLAY_HEIGHT * 0.7, length / 2, height)))
+                    Battlemenulist.append(Button.TTTButton("Bag", RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0.8, DISPLAY_HEIGHT * 0.6, length / 2, height)))
+                    Battlemenulist.append(Button.TTTButton("Pokemon", RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0.8, DISPLAY_HEIGHT * 0.5, length / 2, height)))
+
+                # menu list
+                for button in Battlemenulist:
+                    if hovered_by_mouse(button):
+                        if button.text == "Run":
+                            game_intro()
+                        elif button.text == "Pokemon":
+                            counter = 0
+                            for y in range(3): # rows
+                                for x in range(2): # cols
+                                    pokemon = party.party_list[counter]
+                                    if pokemon != None:
+                                        Pokemonlist.append(Button.TTTButton(f'{pokemon.name} HP:{pokemon.HPcurrent}', RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0 + (x * length), DISPLAY_HEIGHT * 0.5 + (y * height), length, height)))
+                                    elif pokemon == None:
+                                        Pokemonlist.append(Button.TTTButton(f'Empty', RED, BRIGHT_RED, medText, pygame.Rect(DISPLAY_WIDTH * 0 + (x * length), DISPLAY_HEIGHT * 0.5 + (y * height), length, height)))
+                                    #print(x_start + (x * x_change), y_start + (y * y_change), length, height)
+                                    counter += 1
+                            
+
+                for button in Battlemenulist:
+                    if button.text == "Pokemon":
+                        if not hovered_by_mouse(button):
+                            Pokemonlist = []
+                            
+
+                if not hovered_by_mouse(MenuButton):
+                    Battlemenulist = []
+                
+
 
         def check_for_pokemon_death():
             global move_chosen # game breaks when pokemon dies because move_chosen is still true
@@ -153,24 +199,25 @@ def Random_battle():
                 
             elif enemy_pokemon.HPcurrent <= 0:
                 create_text(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, medText, 'You Won!', WHITE, BLACK, True)
+                
                 pygame.display.update()
                 pygame.time.wait(2000)
                 move_chosen = False
                 game_intro()
 
-        def battle(attacker, defender):
+        def battle(user_pokemon, enemy_pokemon):
             global wait_time
             global went
             global move_chosen
 
             #who is faster?
             #user wins tie breakers for rn
-            if attacker.SPD >= defender.SPD:
-                faster = attacker
-                slower = defender
-            elif defender.SPD > attacker.SPD:
-                faster = defender
-                slower = attacker
+            if user_pokemon.SPD >= enemy_pokemon.SPD:
+                faster = user_pokemon
+                slower = enemy_pokemon
+            elif enemy_pokemon.SPD > user_pokemon.SPD:
+                faster = enemy_pokemon
+                slower = user_pokemon
 
             if pygame.time.get_ticks() - wait_time <= 4000:
 
@@ -193,16 +240,22 @@ def Random_battle():
                 check_for_pokemon_death()
 
         if move_chosen == True:
-            # Buttonmovelist = []
             battle(user_pokemon, enemy_pokemon)
 
         def display_pokemoves():
-            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move1.name}', pokecolors[user_pokemon.move1.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.0, DISPLAY_HEIGHT * .8, DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * 0.1)))
-            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move2.name}', pokecolors[user_pokemon.move2.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * .8, DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * 0.1)))
-            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move3.name}', pokecolors[user_pokemon.move3.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.0, DISPLAY_HEIGHT * .9, DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * 0.1)))
-            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move4.name}', pokecolors[user_pokemon.move4.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * .9, DISPLAY_WIDTH * 0.5, DISPLAY_HEIGHT * 0.1)))
+            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move1.name}', pokecolors[user_pokemon.move1.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.0, DISPLAY_HEIGHT * .8, length, height)))
+            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move2.name}', pokecolors[user_pokemon.move2.type], LIGHT_GRAY, medText, pygame.Rect(length, DISPLAY_HEIGHT * .8, length, height)))
+            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move3.name}', pokecolors[user_pokemon.move3.type], LIGHT_GRAY, medText, pygame.Rect(DISPLAY_WIDTH * 0.0, DISPLAY_HEIGHT * .9, length, height)))
+            Buttonmovelist.append(Button.TTTButton(f'{user_pokemon.move4.name}', pokecolors[user_pokemon.move4.type], LIGHT_GRAY, medText, pygame.Rect(length, DISPLAY_HEIGHT * .9, length, height)))
             # "runs" the buttons
+            # battle menu button ################################################################
             mouse = pygame.mouse.get_pos()
+            MenuButton.brighten(mouse)
+            pygame.draw.rect(screen, MenuButton.current_color, MenuButton.rect)
+            pygame.draw.rect(screen, BLACK, MenuButton.rect, 1)
+            blit_text(MenuButton)
+            #####################################################################################
+            # poke move buttons
             for button in Buttonmovelist:
                 button.brighten(mouse)
                 pygame.draw.rect(screen, button.current_color, button.rect)
@@ -257,6 +310,19 @@ def Random_battle():
 
             if move_chosen == False:
                 display_pokemoves()
+                for button in Battlemenulist:
+                    mouse = pygame.mouse.get_pos()
+                    button.brighten(mouse)
+                    pygame.draw.rect(screen, button.current_color, button.rect)
+                    pygame.draw.rect(screen, BLACK, button.rect, 1)
+                    blit_text(button)
+                for button in Pokemonlist:
+                    mouse = pygame.mouse.get_pos()
+                    button.brighten(mouse)
+                    pygame.draw.rect(screen, button.current_color, button.rect)
+                    pygame.draw.rect(screen, BLACK, button.rect, 1)
+                    blit_text(button)
+
             
             #display fps
             create_text(DISPLAY_WIDTH*0.95, 0, smallText, f'{round(clock.get_fps())}', WHITE, BLACK)

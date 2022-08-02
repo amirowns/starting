@@ -1,6 +1,6 @@
-
 import pyodbc
 from random import choice
+import pokemonParty
 
 pokeMoveCounter = 4
 
@@ -52,6 +52,8 @@ class Pokemon():
         self.selected_move = None
         self.damage = None
         self.howeffectivewasit = None
+
+        self.party_slot = None
 
     def select_player_move(self, move):
         self.selected_move = move
