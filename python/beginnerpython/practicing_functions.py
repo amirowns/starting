@@ -15,7 +15,6 @@ def digit_sum(n):
     total = 0
     nstring = str(n)
     for num in nstring:
-        
         total += int(num)
     return total
 # determines the factorial of a number

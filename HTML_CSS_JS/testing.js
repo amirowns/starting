@@ -1,23 +1,20 @@
-const shipFactory = (length, n) => {
-  let ship = Array(length).fill("o");
-  let name = n;
-  let life = length;
-  function hit() {
-    this.life -= 1;
+function digPow(n, p) {
+  let arr = String(n)
+    .split("")
+    .map((num) => parseInt(num));
+
+  let sum = 0;
+  for (let i = 0; i < arr.length; i++) {
+    sum += arr[i] ** (i + p);
   }
-  const isSunk = () => {
-    if (life == 0) {
-      return true;
-    } else {
-      return false;
-    }
-  };
 
-  return { length, ship, name, life, hit, isSunk };
-};
+  if (sum % n == 0) {
+    return sum / n;
+  } else {
+    return -1;
+  }
+}
 
-let ship = shipFactory(1, "s1");
-console.log(ship);
-ship.hit();
-console.log(ship.life);
-console.log(ship);
+digPow(89, 1);
+digPow(92, 1);
+digPow(46288, 3);
