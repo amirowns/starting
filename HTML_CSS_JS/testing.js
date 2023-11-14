@@ -1,20 +1,12 @@
-function digPow(n, p) {
-  let arr = String(n)
-    .split("")
-    .map((num) => parseInt(num));
-
-  let sum = 0;
-  for (let i = 0; i < arr.length; i++) {
-    sum += arr[i] ** (i + p);
-  }
-
-  if (sum % n == 0) {
-    return sum / n;
+function sumArray(array) {
+  if (Array.isArray(array) == false) {
+    return 0;
   } else {
-    return -1;
+    return array
+      .sort(function (a, b) {
+        return a - b;
+      })
+      .slice(1, -1)
+      .reduce((a, b) => a + b, 0);
   }
 }
-
-digPow(89, 1);
-digPow(92, 1);
-digPow(46288, 3);

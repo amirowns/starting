@@ -1,0 +1,7 @@
+library(plotly) llm_data <-tibble( Model = c("GPT3", "LaMDa", "PaLM",
+"Chinchilla", "mt-nlg", "Gopher"), Params = c(175L, 137L, 540L, 70L, 530L,
+280L), Training_Data = c(300L, 168L, 780L, 1400L, 270L, 300L) ) llm_data %>%
+plot_ly(x = ~Training_Data, y = ~Params, labels = ~Model, type = 'scatter', mode
+= 'markers') %>% layout(title = 'LLM Model Parameters vs. Training Data', xaxis
+= list(title = 'Training Data (billion tokens)'), yaxis = list(title =
+'Parameters (billions)'))
